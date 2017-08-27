@@ -8,17 +8,32 @@
 
 import Foundation
 
-class List {
-    var title: String
-    var dateCreated: Date = Date()
-    var items: [Item] = []
+class List: Equatable {
+    let id: String = UUID().uuidString
+    private (set) var title: String
+    private (set) var dateCreated: Date = Date()
+    private (set) var items: [Item] = []
+
+    var itemCount: Int {
+        return items.count
+    }
 
     init(title: String) {
         self.title = title
     }
 
+    func item(at index: Int) -> Item? {
+        guard index < items.count else { return nil }
+        return items[index]
+    }
+
+    func index(of item: Item) -> Int? {
+        return items.index(of: item)
+    }
+
     func add(item: Item) {
         items.append(item)
+        NotificationCenter.default.post(name: .itemAdded, object: nil, userInfo: [NotificationKey.itemId: item.id, NotificationKey.listId: id])
     }
 
     func markAllAsCompleted() {
@@ -26,4 +41,19 @@ class List {
             each.isCompleted = true
         }
     }
+
+    func delete(item: Item) {
+        guard let index = index(of: item) else { return }
+        items.remove(at: index)
+        NotificationCenter.default.post(name: .itemDeleted, object: nil, userInfo: [NotificationKey.itemId: item.id, NotificationKey.listId: id])
+    }
+
+    func delete(at index: Int) {
+        guard let item = item(at: index) else { return }
+        items.remove(at: index)
+        NotificationCenter.default.post(name: .itemDeleted, object: nil, userInfo: [NotificationKey.itemId: item.id, NotificationKey.listId: id])
+    }
 }
+
+func == (lhs: List, rhs: List) -> Bool { return lhs.id == rhs.id }
+func < (lhs: List, rhs: List) -> Bool { return lhs.id < rhs.id }

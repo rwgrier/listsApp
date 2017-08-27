@@ -1,2 +1,8 @@
 disabled_rules:
   - line_length
+  - discarded_notification_center_observer
+
+# because I use `id` as variable names.
+identifier_name:
+  excluded:
+    - id
