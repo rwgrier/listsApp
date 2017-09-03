@@ -20,6 +20,8 @@
 		8F85B6C21F1AAEAE002A6AE7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8F85B6C01F1AAEAE002A6AE7 /* LaunchScreen.storyboard */; };
 		8F85B6CD1F1AAEAE002A6AE7 /* ListsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F85B6CC1F1AAEAE002A6AE7 /* ListsTests.swift */; };
 		8F85B6D81F1AAEAE002A6AE7 /* ListsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F85B6D71F1AAEAE002A6AE7 /* ListsUITests.swift */; };
+		8F9BB4471F5B3A00000C6D05 /* RealmSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F9BB4451F5B3A00000C6D05 /* RealmSwift.framework */; };
+		8F9BB4481F5B3A00000C6D05 /* Realm.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F9BB4461F5B3A00000C6D05 /* Realm.framework */; };
 		8FA73B271F26C1BD004CD2C7 /* ListsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FA73B261F26C1BD004CD2C7 /* ListsViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -60,6 +62,8 @@
 		8F85B6D31F1AAEAE002A6AE7 /* ListsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ListsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F85B6D71F1AAEAE002A6AE7 /* ListsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsUITests.swift; sourceTree = "<group>"; };
 		8F85B6D91F1AAEAE002A6AE7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8F9BB4451F5B3A00000C6D05 /* RealmSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RealmSwift.framework; path = Carthage/Build/iOS/RealmSwift.framework; sourceTree = "<group>"; };
+		8F9BB4461F5B3A00000C6D05 /* Realm.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Realm.framework; path = Carthage/Build/iOS/Realm.framework; sourceTree = "<group>"; };
 		8FA73B261F26C1BD004CD2C7 /* ListsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -68,6 +72,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F9BB4471F5B3A00000C6D05 /* RealmSwift.framework in Frameworks */,
+				8F9BB4481F5B3A00000C6D05 /* Realm.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,6 +111,7 @@
 				8F85B6CB1F1AAEAE002A6AE7 /* ListsTests */,
 				8F85B6D61F1AAEAE002A6AE7 /* ListsUITests */,
 				8F85B6B31F1AAEAE002A6AE7 /* Products */,
+				8F9BB4441F5B3A00000C6D05 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -154,6 +161,15 @@
 			path = ListsUITests;
 			sourceTree = "<group>";
 		};
+		8F9BB4441F5B3A00000C6D05 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8F9BB4461F5B3A00000C6D05 /* Realm.framework */,
+				8F9BB4451F5B3A00000C6D05 /* RealmSwift.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -165,6 +181,7 @@
 				8F85B6AF1F1AAEAE002A6AE7 /* Frameworks */,
 				8F85B6B01F1AAEAE002A6AE7 /* Resources */,
 				8F6E0E161F1B150D002CE0CF /* ShellScript */,
+				8F9BB4491F5B3A22000C6D05 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -294,6 +311,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if which swiftlint >/dev/null; then\nswiftlint\nelse\necho \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi";
+		};
+		8F9BB4491F5B3A22000C6D05 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Carthage/Build/iOS/Realm.framework",
+				"$(SRCROOT)/Carthage/Build/iOS/RealmSwift.framework",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -477,6 +509,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = G8C3PMN49A;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = Lists/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ryangrier.Lists;
@@ -491,6 +527,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = G8C3PMN49A;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = Lists/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ryangrier.Lists;

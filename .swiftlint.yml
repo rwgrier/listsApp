@@ -1,6 +1,9 @@
 disabled_rules:
   - line_length
   - discarded_notification_center_observer
+  
+excluded: 
+  - Carthage
 
 # because I use `id` as variable names.
 identifier_name:
