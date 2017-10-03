@@ -7,18 +7,31 @@
 //
 
 import UIKit
+import RealmSwift
 
 class ListsViewController: UITableViewController {
+    private var notificationToken: NotificationToken?
+    private var lists: Results<List>?
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action:  #selector(addNewList(_:)))
         navigationItem.rightBarButtonItem = addButton
+
+        lists = try? RealmDataSource.shared.getItems()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         clearsSelectionOnViewWillAppear = splitViewController?.isCollapsed ?? false
         super.viewWillAppear(animated)
+
+        setupObservers()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        tearDownObservers()
     }
 
     // MARK: - Segues
@@ -29,7 +42,7 @@ class ListsViewController: UITableViewController {
         guard segue.identifier == "showItems" else { return }
         guard let itemsViewController = segue.destination as? ItemsViewController else { return }
         guard let row = tableView.indexPathForSelectedRow?.row else { return }
-        itemsViewController.list = DataSource.shared.list(at: row)
+        itemsViewController.list = lists?[row]
     }
 
     // MARK: - User actions
@@ -41,10 +54,8 @@ class ListsViewController: UITableViewController {
         })
         let save = UIAlertAction(title: "Save", style: .default, handler: { (_) in
             guard let title = alert.textFields?.first?.text else { return }
-            let list = List(title: title)
-            DataSource.shared.add(list: list)
+            _ = try? RealmDataSource.shared.createList(with: title)
 
-            self.tableView.reloadData()
             self.dismiss(animated: true, completion: nil)
         })
 
@@ -67,14 +78,14 @@ extension ListsViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return DataSource.shared.lists.count
+        return lists?.count ?? 0
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ListCell", for: indexPath)
-        let list = DataSource.shared.list(at: indexPath.row)
 
-        cell.textLabel?.text = list?.title
+        cell.textLabel?.text = lists?[indexPath.row].title
+
         return cell
     }
 
@@ -84,7 +95,32 @@ extension ListsViewController {
 
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         guard editingStyle == .delete else { return }
-        DataSource.shared.delete(at: indexPath.row)
-        tableView.deleteRows(at: [indexPath], with: .fade)
+        guard let list = lists?[indexPath.row] else { return }
+        try? RealmDataSource.shared.delete(list: list)
+    }
+}
+
+extension ListsViewController {
+    private func setupObservers() {
+        notificationToken = lists?.addNotificationBlock({ [weak self] (changes: RealmCollectionChange) in
+            guard let strongSelf = self else { return }
+            switch changes {
+            case .initial:
+                strongSelf.tableView.reloadData()
+            case .update(_, let deletions, let insertions, let modifications):
+                strongSelf.tableView.beginUpdates()
+                strongSelf.tableView.insertRows(at: insertions.map({ IndexPath(row: $0, section: 0) }), with: .automatic)
+                strongSelf.tableView.deleteRows(at: deletions.map({ IndexPath(row: $0, section: 0)}), with: .automatic)
+                strongSelf.tableView.reloadRows(at: modifications.map({ IndexPath(row: $0, section: 0) }), with: .automatic)
+                strongSelf.tableView.endUpdates()
+            case .error(let error):
+                print("ERROR: \(error)")
+            }
+        })
+    }
+
+    private func tearDownObservers() {
+        notificationToken?.stop()
+        notificationToken = nil
     }
 }

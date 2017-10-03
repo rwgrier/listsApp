@@ -19,13 +19,14 @@ class AddItemViewController: UIViewController {
     }
 
     @IBAction func save(_ sender: UIBarButtonItem) {
+        guard let list = owningList else { return }
         do {
             try validate()
             let title = titleTextField.text ?? ""
             let description = descriptionTextView.text
-            let item = Item(title: title, description: description)
 
-            owningList?.add(item: item)
+            _ = try? RealmDataSource.shared.createItem(with: title, description: description, inList: list)
+
             dismiss(animated: true, completion: nil)
         } catch {
             // Since we only throw a missing title, we only need to deal with one error

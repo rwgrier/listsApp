@@ -7,19 +7,20 @@
 //
 
 import Foundation
+import RealmSwift
 
-class Item: Equatable {
-    let id: String = UUID().uuidString
-    private (set) var title: String
-    private (set) var description: String?
-    private (set) var dateCreated: Date = Date()
-    var isCompleted: Bool = false
+class Item: Object {
+    @objc dynamic var id: String = UUID().uuidString
+    @objc dynamic var title: String?
+    @objc dynamic var desc: String?
+    @objc dynamic var dateCreated: Date = Date()
+    @objc dynamic var isCompleted: Bool = false
 
-    init(title: String, description: String? = nil) {
+    @objc dynamic var list: List?
+
+    convenience init(title: String, description: String? = nil) {
+        self.init()
         self.title = title
-        self.description = description
+        self.desc = description
     }
 }
-
-func == (lhs: Item, rhs: Item) -> Bool { return lhs.id == rhs.id }
-func < (lhs: Item, rhs: Item) -> Bool { return lhs.id < rhs.id }

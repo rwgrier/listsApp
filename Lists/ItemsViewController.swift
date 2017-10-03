@@ -7,8 +7,10 @@
 //
 
 import UIKit
+import RealmSwift
 
 class ItemsViewController: UITableViewController {
+    private var notificationToken: NotificationToken?
     var list: List? {
         didSet { title = list?.title }
     }
@@ -18,18 +20,17 @@ class ItemsViewController: UITableViewController {
 
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action:  #selector(addNewItem(_:)))
         navigationItem.rightBarButtonItem = addButton
-        setupObservers()
-    }
-
-    deinit {
-        tearDownObservers()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         clearsSelectionOnViewWillAppear = splitViewController?.isCollapsed ?? true
         super.viewWillAppear(animated)
+        setupObservers()
+    }
 
-        tableView.reloadData()
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        tearDownObservers()
     }
 
     // MARK: - Segues
@@ -39,7 +40,7 @@ class ItemsViewController: UITableViewController {
             guard let row = tableView.indexPathForSelectedRow?.row else { return }
             guard let controller = (segue.destination as? UINavigationController)?.topViewController as? DetailViewController else { return }
 
-            controller.item = list?.item(at: row)
+            controller.item = list?.items[row]
             controller.navigationItem.leftBarButtonItem = splitViewController?.displayModeButtonItem
             controller.navigationItem.leftItemsSupplementBackButton = true
         } else if segue.identifier == "showAddEdit" {
@@ -63,16 +64,15 @@ extension ItemsViewController {
         let actionTitle = NSLocalizedString(isCompleted ? "Mark not completed" : "Mark completed", comment: "")
         let completedAction = UITableViewRowAction(style: .default, title: actionTitle, handler: { (_, indexPath) -> Void in
             guard let item = self.list?.items[indexPath.row] else { return }
-            item.isCompleted = !item.isCompleted
-            self.tableView.reloadRows(at: [indexPath], with: .automatic)
+            try? RealmDataSource.shared.mark(item: item, asCompleted: !item.isCompleted)
         })
         completedAction.backgroundColor = view.tintColor
 
         let deleteTitle = NSLocalizedString("Delete", comment: "")
         let deleteAction = UITableViewRowAction(style: .destructive, title: deleteTitle, handler: { (_, indexPath) -> Void in
-            guard let list = self.list else { return }
-            list.delete(at: indexPath.row)
-            self.tableView.deleteRows(at: [indexPath], with: .fade)
+            guard let item = self.list?.items[indexPath.row] else { return }
+
+            try? RealmDataSource.shared.delete(item: item)
         })
 
         actions = [deleteAction, completedAction]
@@ -94,9 +94,8 @@ extension ItemsViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ItemCell", for: indexPath)
-        let item = list?.item(at: indexPath.row)
 
-        cell.textLabel?.text = item?.title
+        cell.textLabel?.text = list?.items[indexPath.row].title
         return cell
     }
 
@@ -105,9 +104,9 @@ extension ItemsViewController {
     }
 
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        guard editingStyle == .delete, let list = list else { return }
-        list.delete(at: indexPath.row)
-        tableView.deleteRows(at: [indexPath], with: .fade)
+        guard editingStyle == .delete, let item = list?.items[indexPath.row] else { return }
+
+        try? RealmDataSource.shared.delete(item: item)
     }
 }
 
@@ -115,17 +114,25 @@ extension ItemsViewController {
 
 extension ItemsViewController {
     private func setupObservers() {
-        NotificationCenter.default.addObserver(forName: .itemAdded, object: nil, queue: .main) { [weak self] (notification: Notification) in
+        notificationToken = list?.items.addNotificationBlock({ [weak self] (changes: RealmCollectionChange) in
             guard let strongSelf = self else { return }
-            guard let list = strongSelf.list else { return }
-            guard let listId = notification.userInfo?[NotificationKey.listId] as? String  else { return }
-            guard list.id == listId else { return }
-
-            strongSelf.tableView.reloadData()
-        }
+            switch changes {
+            case .initial:
+                strongSelf.tableView.reloadData()
+            case .update(_, let deletions, let insertions, let modifications):
+                strongSelf.tableView.beginUpdates()
+                strongSelf.tableView.insertRows(at: insertions.map({ IndexPath(row: $0, section: 0) }), with: .automatic)
+                strongSelf.tableView.deleteRows(at: deletions.map({ IndexPath(row: $0, section: 0)}), with: .automatic)
+                strongSelf.tableView.reloadRows(at: modifications.map({ IndexPath(row: $0, section: 0) }), with: .automatic)
+                strongSelf.tableView.endUpdates()
+            case .error(let error):
+                print("ERROR: \(error)")
+            }
+        })
     }
 
     private func tearDownObservers() {
-        NotificationCenter.default.removeObserver(self)
+        notificationToken?.stop()
+        notificationToken = nil
     }
 }
