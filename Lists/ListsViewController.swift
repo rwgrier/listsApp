@@ -102,7 +102,7 @@ extension ListsViewController {
 
 extension ListsViewController {
     private func setupObservers() {
-        notificationToken = lists?.addNotificationBlock({ [weak self] (changes: RealmCollectionChange) in
+        notificationToken = lists?.observe({ [weak self] (changes: RealmCollectionChange) in
             guard let strongSelf = self else { return }
             switch changes {
             case .initial:
@@ -120,7 +120,7 @@ extension ListsViewController {
     }
 
     private func tearDownObservers() {
-        notificationToken?.stop()
+        notificationToken?.invalidate()
         notificationToken = nil
     }
 }

@@ -92,7 +92,7 @@ class DetailViewController: UIViewController {
 extension DetailViewController {
     private func setupObservers() {
         guard notificationToken == nil else { return }
-        notificationToken = item?.addNotificationBlock({ [weak self] (change: ObjectChange) in
+        notificationToken = item?.observe({ [weak self] (change: ObjectChange) in
             guard let strongSelf = self else { return }
             defer { strongSelf.configureView() }
 
