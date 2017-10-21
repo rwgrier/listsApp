@@ -16,7 +16,7 @@ class ListsViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action:  #selector(addNewList(_:)))
+        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewList(_:)))
         navigationItem.rightBarButtonItem = addButton
 
         lists = try? RealmDataSource.shared.getItems()

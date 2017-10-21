@@ -18,7 +18,7 @@ class ItemsViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action:  #selector(addNewItem(_:)))
+        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewItem(_:)))
         navigationItem.rightBarButtonItem = addButton
     }
 
