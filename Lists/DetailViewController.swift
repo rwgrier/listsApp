@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import RealmSwift
 
 class DetailViewController: UIViewController {
     @IBOutlet private var idLabel: UILabel!
@@ -17,28 +18,37 @@ class DetailViewController: UIViewController {
 
     @IBOutlet private var emptyView: UIView!
 
-    var item: Item? { didSet { title = item?.title } }
+    private var notificationToken: NotificationToken?
+    var item: Item? {
+        willSet { tearDownObservers() }
+        didSet {
+            title = item?.title
+            setupObservers()
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         setupEmptyView()
         configureView()
-        setupObservers()
-    }
-
-    deinit {
-        tearDownObservers()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+
+        setupObservers()
         configureView()
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        tearDownObservers()
+    }
+
     @IBAction func completedSwitchChanged(_ sender: UISwitch) {
-        guard completedSwitch == sender else { return }
-        item?.isCompleted = sender.isOn
+        guard completedSwitch == sender, let item = item else { return }
+        try? RealmDataSource.shared.mark(item: item, asCompleted: sender.isOn)
     }
 
     func configureView() {
@@ -81,15 +91,16 @@ class DetailViewController: UIViewController {
 
 extension DetailViewController {
     private func setupObservers() {
-        NotificationCenter.default.addObserver(forName: .itemDeleted, object: nil, queue: .main) { [weak self] (notification: Notification) in
+        guard notificationToken == nil else { return }
+        notificationToken = item?.observe({ [weak self] (change: ObjectChange) in
             guard let strongSelf = self else { return }
-            guard let item = strongSelf.item else { return }
-            guard let itemId = notification.userInfo?[NotificationKey.itemId] as? String  else { return }
-            guard item.id == itemId else { return }
+            defer { strongSelf.configureView() }
 
-            strongSelf.item = nil
-            strongSelf.configureView()
-        }
+            switch change {
+            case .deleted:  strongSelf.item = nil
+            default:        break
+            }
+        })
     }
 
     private func tearDownObservers() {

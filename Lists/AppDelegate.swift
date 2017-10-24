@@ -17,6 +17,8 @@ class AppDelegate: UIResponder {
 
 extension AppDelegate: UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+
+        _ = RealmDataSource.shared
         // Override point for customization after application launch.
         guard let splitViewController = window?.rootViewController as? UISplitViewController else { return true }
         guard let navigationController = splitViewController.viewControllers.last as? UINavigationController else { return true }
