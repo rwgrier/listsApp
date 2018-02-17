@@ -113,7 +113,7 @@ extension RealmDataSource {
 
             try createItem(with: "Watch Game of Thrones", inList: list)
             try createItem(with: "Clean the Gutters", inList: list)
-        } catch (let error) {
+        } catch let error {
             print("Failed to write data: \(error)")
         }
     }
@@ -125,7 +125,7 @@ extension RealmDataSource {
             try createItem(with: "Milk", inList: list)
             try createItem(with: "Bread", inList: list)
             try createItem(with: "1 dozen eggs", inList: list)
-        } catch (let error) {
+        } catch let error {
             print("Failed to write data: \(error)")
         }
     }
@@ -146,7 +146,7 @@ extension RealmDataSource {
             try realm.write {
                 fiveK.isCompleted = true
             }
-        } catch (let error) {
+        } catch let error {
             print("Failed to write data: \(error)")
         }
     }
@@ -154,7 +154,7 @@ extension RealmDataSource {
     private func _generateEmptyList() {
         do {
             try createList(with: "Empty list. I like 🌮s.")
-        } catch (let error) {
+        } catch let error {
             print("Failed to write data: \(error)")
         }
     }
